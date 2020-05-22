@@ -1,3 +1,5 @@
+const bcrypt = require("bcrypt");
+
 exports.randomNumber = function (length) {
 	var text = "";
 	var possible = "123456789";
@@ -7,3 +9,10 @@ exports.randomNumber = function (length) {
 	}
 	return Number(text);
 };
+
+exports.bcrypthash= function(password,callback){
+	bcrypt.hash(password,10,function(err, hash) {
+		callback(err,hash);
+	})
+}
+

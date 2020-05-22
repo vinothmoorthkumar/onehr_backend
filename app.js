@@ -7,13 +7,39 @@ var indexRouter = require("./routes/index");
 var apiRouter = require("./routes/api");
 var apiResponse = require("./helpers/apiResponse");
 var cors = require("cors");
-
+const utility = require("./helpers/utility");
+const User = require("./models/UserModel");
+const config = require("./config");
 // DB connection
 var MONGODB_URL = process.env.MONGODB_URL;
 var mongoose = require("mongoose");
 mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => {
 	//don't show the log when it is test
-	if(process.env.NODE_ENV !== "test") {
+	if (process.env.NODE_ENV !== "test") {
+		User.findOne({ superadmin: true, status: true }).then(user => {
+			if (!user) {
+				utility.bcrypthash(config.superadmin.password, function (err, hash) {
+					var user = new User(
+						{
+							username: config.superadmin.username,
+							email: config.superadmin.email,
+							password: hash,
+							superadmin: true
+						});
+					user.save(function (err) {
+						if (err) {
+							console.error("Create Super admin error", err.message);
+						} else {
+							console.log("Super admin created");
+						}
+					});
+				})
+
+			} else {
+				console.log("Super admin already exist")
+			}
+		});
+
 		console.log("Connected to %s", MONGODB_URL);
 		console.log("App is running ... \n");
 		console.log("Press CTRL + C to stop the process. \n");
@@ -28,7 +54,7 @@ var db = mongoose.connection;
 var app = express();
 
 //don't show the log when it is test
-if(process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== "test") {
 	app.use(logger("dev"));
 }
 app.use(express.json());
@@ -44,12 +70,12 @@ app.use("/", indexRouter);
 app.use("/api/", apiRouter);
 
 // throw 404 if URL not found
-app.all("*", function(req, res) {
+app.all("*", function (req, res) {
 	return apiResponse.notFoundResponse(res, "Page not found");
 });
 
 app.use((err, req, res) => {
-	if(err.name == "UnauthorizedError"){
+	if (err.name == "UnauthorizedError") {
 		return apiResponse.unauthorizedResponse(res, err.message);
 	}
 });
