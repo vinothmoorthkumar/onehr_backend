@@ -35,8 +35,6 @@ mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true 
 					});
 				})
 
-			} else {
-				console.log("Super admin already exist")
 			}
 		});
 
