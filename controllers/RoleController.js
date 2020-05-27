@@ -63,11 +63,17 @@ exports.RoleList = [
     auth,
     function (req, res) {
         try {
-            Role.find({ status: true }).then((roles) => {
+            let skip = parseInt(req.query.skip) || 0;
+            let limit = parseInt(req.query.limit) || 10;
+            console.log('******',skip,limit)
+
+            Role.find({ status: true }).skip(skip).limit(limit).then((roles) => {
                 if (roles.length > 0) {
-                    return apiResponse.successResponseWithData(res, "Operation success", roles);
+                    Role.find({ status: true }).count().then((count) => {
+                        return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: roles });
+                    });
                 } else {
-                    return apiResponse.successResponseWithData(res, "Operation success", []);
+                    return apiResponse.successResponseWithData(res, "Operation success", { total: 0, result: [] });
                 }
             });
         } catch (err) {
