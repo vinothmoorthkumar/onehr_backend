@@ -64,12 +64,10 @@ exports.RoleList = [
     function (req, res) {
         try {
             let skip = parseInt(req.query.skip) || 0;
-            let limit = parseInt(req.query.limit) || 10;
-            console.log('******',skip,limit)
-
+            let limit = parseInt(req.query.limit) || 0;
             Role.find({ status: true }).skip(skip).limit(limit).then((roles) => {
                 if (roles.length > 0) {
-                    Role.find({ status: true }).count().then((count) => {
+                    Role.find({ status: true }).countDocuments().then((count) => {
                         return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: roles });
                     });
                 } else {
@@ -118,7 +116,6 @@ exports.RoleUpdate = [
                     acl: req.body.acl,
                     _id: req.params.id
                 });
-            console.log('test', role)
             if (!errors.isEmpty()) {
                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
             }

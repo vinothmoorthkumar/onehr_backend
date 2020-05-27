@@ -21,6 +21,7 @@ mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true 
 				utility.bcrypthash(config.superadmin.password, function (err, hash) {
 					var user = new User(
 						{
+							name: config.superadmin.name,
 							username: config.superadmin.username,
 							email: config.superadmin.email,
 							password: hash,
