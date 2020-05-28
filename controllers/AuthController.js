@@ -114,11 +114,28 @@ exports.login = [
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			} else {
-				UserModel.findOne({ username: req.body.username }).then(user => {
+				UserModel.findOne({ username: req.body.username }).populate('role').then(user => {
 					if (user) {
 						//Compare given password with db's hash.
 						bcrypt.compare(req.body.password, user.password, function (err, same) {
 							if (same) {
+								console.log('user',user)
+								let acl =[]
+								if(user.role && user.role.acl){
+									user.role.acl.forEach((element,i) => {
+										let permission=[];
+										element.permission.forEach(obj => {
+											if(obj.selected){
+												permission.push(obj.key)
+											}
+										});
+										acl.push({
+											module:element.module,
+											name:element.name,
+											permission
+										})
+									});
+								}
 								// Check User's account active or not.
 								if (user.status) {
 									let userData = {
@@ -126,6 +143,8 @@ exports.login = [
 										username: user.username,
 										superadmin: user.superadmin || false,
 										email: user.email,
+										role: user.role ?user.role.name : 'superadmin',
+										permission:acl
 									};
 									//Prepare JWT token for authentication
 									const jwtPayload = userData;
