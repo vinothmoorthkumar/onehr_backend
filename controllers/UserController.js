@@ -70,9 +70,16 @@ exports.UserList = [
         try {
             let skip = parseInt(req.query.skip) || 0;
             let limit = parseInt(req.query.limit) || 10;
-            User.find({ status: true }).skip(skip).limit(limit).then((users) => {
+            let sort={};
+            sort[req.query.sortby]=req.query.order=="true"?1:-1;
+            let query={ status: true }
+            if(req.query.search){
+                query['username'] = {$regex: req.query.search, $options:"i"}
+            }
+
+            User.find(query).skip(skip).limit(limit).sort(sort).then((users) => {
                 if (users.length > 0) {
-                    User.find({ status: true }).countDocuments().then((count) => {
+                    User.find(query).countDocuments().then((count) => {
                         return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: users });
                     });
                 } else {
