@@ -64,10 +64,17 @@ exports.RoleList = [
     function (req, res) {
         try {
             let skip = parseInt(req.query.skip) || 0;
-            let limit = parseInt(req.query.limit) || 0;
-            Role.find({ status: true }).skip(skip).limit(limit).then((roles) => {
+            let limit = parseInt(req.query.limit) || 10;
+            let sort={};
+            sort[req.query.sortby]=req.query.order=="true"?1:-1;
+            let query={ status: true }
+            if(req.query.search){
+                query['name'] = {$regex: req.query.search, $options:"i"}
+            }
+
+            Role.find(query).skip(skip).limit(limit).sort(sort).then((roles) => {
                 if (roles.length > 0) {
-                    Role.find({ status: true }).countDocuments().then((count) => {
+                    Role.find(query).countDocuments().then((count) => {
                         return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: roles });
                     });
                 } else {
