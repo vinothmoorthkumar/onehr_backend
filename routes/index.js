@@ -17,7 +17,6 @@ router.get("/", function(req, res) {
 
 router.get("/site/:slug", function(req, res) {
 	try {
-		console.log('slug',req.params.slug);
 		Page.findOne({slug: req.params.slug}).then((page) => {
 			if (page !== null) {
 				let pageData = new PageData(page);

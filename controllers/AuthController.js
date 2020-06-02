@@ -83,7 +83,6 @@ exports.register = [
 							return apiResponse.successResponseWithData(res, "Registration Success.", userData);
 						});
 					}).catch(err => {
-						console.log(err);
 						return apiResponse.ErrorResponse(res, err);
 					});
 				});
@@ -119,7 +118,6 @@ exports.login = [
 						//Compare given password with db's hash.
 						bcrypt.compare(req.body.password, user.password, function (err, same) {
 							if (same) {
-								console.log('user',user)
 								let acl =[]
 								if(user.role && user.role.acl){
 									user.role.acl.forEach((element,i) => {
