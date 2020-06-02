@@ -17,7 +17,8 @@ router.get("/", function(req, res) {
 
 router.get("/site/:slug", function(req, res) {
 	try {
-		Page.findOne({}).then((page) => {
+		console.log('slug',req.params.slug);
+		Page.findOne({slug: req.params.slug}).then((page) => {
 			if (page !== null) {
 				let pageData = new PageData(page);
 				return apiResponse.successResponseWithData(res, "Operation success", pageData);
