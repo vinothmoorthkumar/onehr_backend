@@ -20,20 +20,6 @@ exports.RoleSave = [
     (req, res) => {
         try {
             const errors = validationResult(req);
-            // let acl =[]
-            // req.body.acl.forEach((element,i) => {
-            //     let permission=[];
-            //     element.permission.forEach(obj => {
-            //         if(obj.selected){
-            //             permission.push(obj.key)
-            //         }
-            //     });
-            //     acl.push({
-            //         module:element.module,
-            //         name:element.name,
-            //         permission
-            //     })
-            // });
             var role = new Role(
                 {
                     name: req.body.name,

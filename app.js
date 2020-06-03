@@ -10,6 +10,7 @@ var cors = require("cors");
 const utility = require("./helpers/utility");
 const User = require("./models/UserModel");
 const config = require("./config");
+
 // DB connection
 var MONGODB_URL = process.env.MONGODB_URL;
 var mongoose = require("mongoose");
