@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const multer = require('multer');
 const path = require('path');
+const apiResponse = require("../helpers/apiResponse");
+
 exports.randomNumber = function (length) {
 	var text = "";
 	var possible = "123456789";
@@ -11,25 +13,34 @@ exports.randomNumber = function (length) {
 	return Number(text);
 };
 
-exports.bcrypthash= function(password,callback){
-	bcrypt.hash(password,10,function(err, hash) {
-		callback(err,hash);
+exports.bcrypthash = function (password, callback) {
+	bcrypt.hash(password, 10, function (err, hash) {
+		callback(err, hash);
 	})
 }
 
 
-exports.fileupload= function(file){
-
+exports.fileupload = function (file,allow) {
 	var storage = multer.diskStorage({
 		destination: function (req, file, callback) {
-		  callback(null, './media');
+			callback(null, './media');
 		},
 		filename: function (req, file, callback) {
-		  callback(null, file.fieldname + '-' + Date.now()+path.extname(file.originalname));
+			callback(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
 		}
-	  });
-	  
-	  return multer({ storage : storage }).array(file,20);
-	  
+	});
+
+	return multer({
+		storage: storage,
+		fileFilter: function (req, file, callback) {
+			var ext = path.extname(file.originalname);
+			// /\.(jpg|jpeg|png|gif)$/
+			if (!ext.match(`\.(${allow})$`)) {
+				return callback(new Error('Only images are allowed'))
+			}
+			callback(null, true)
+		},
+	}).array(file, 20);
+
 }
 

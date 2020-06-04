@@ -61,6 +61,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/media',express.static(path.join(__dirname, "media")));
 
 //To allow cross-origin requests
 app.use(cors());

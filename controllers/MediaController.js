@@ -20,50 +20,59 @@ function MediaData(data) {
     this.fileType = data.fileType;
     this.fileSize = data.fileSize;
     this.createdAt = data.createdAt;
+    this.status = data.status;
 }
 
 exports.MediaSave = [
     // auth,
-    helpers.fileupload('files'),
+    helpers.fileupload('files', 'jpg|jpeg|png|gif'),
     body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
-    // body('files', 'Please upload your file in PDF').exists(),
+    body('files', 'Please upload your file in Image').exists(),
     body("page", "page must not be empty.").isLength({ min: 1 }).trim(),
     // body("section", "Section must not be empty.").isLength({ min: 1 }).trim(),
     (req, res) => {
         try {
             const errors = validationResult(req);
-            console.log(req.body.name);
+            console.log(req.body.fileSize);
             console.log(req.files);
 
-            var media = req.files.map(ele=>{
-                return {
-                    name: req.body.name,
-                    page: req.body.page,
-                    section: req.body.section,
-                    link: req.body.link,
-                    fileName: ele.filename,
-                    fileOriginalName: ele.originalname,
-                    filePath: '/media/' + ele.filename,
-                    fileSize: ele.size,
-                    fileType: ele.mimetype
-                };
-            })
-            console.log('test', media)
+            let file = req.files[0]
+            var media = {
+                name: req.body.name,
+                page: req.body.page,
+                section: req.body.section,
+                link: req.body.link,
+                fileName: file.filename,
+                fileOriginalName: file.originalname,
+                filePath: '/media/' + file.filename,
+                fileSize: file.size,
+                fileType: file.mimetype,
+                status: 1
+            };
+
             if (!errors.isEmpty()) {
                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
             }
             else {
-                //Save media.
-                Media.collection.insert(media,function (err) {
-                    if (err) { return apiResponse.ErrorResponse(res, err); }
-                    let mediaData = new MediaData(media);
-                    return apiResponse.successResponseWithData(res, "Media add Success.", mediaData);
-                });
+
+                if (req.body.fileSize == 'single') {
+                    Media.findOneAndUpdate({ page: req.body.page }, media).then((mediaData) => {
+                        apiResponse.successResponseWithData(res, "Media add Success.", mediaData);
+                    });
+                } else {
+                    return saveData()
+                }
+
+                function saveData() {
+                    //Save media.
+                    return Media.collection.insert(media, function (err) {
+                        if (err) { return apiResponse.ErrorResponse(res, err); }
+                        let mediaData = new MediaData(media);
+                        return apiResponse.successResponseWithData(res, "Media add Success.", mediaData);
+                    });
+                }
+
             }
-
-
-
-
         } catch (err) {
             //throw error in json response with status 500. 
             console.log('err', err)
@@ -72,129 +81,143 @@ exports.MediaSave = [
     }
 ];
 
-// exports.RoleList = [
-//     auth,
-//     function (req, res) {
-//         try {
-//             let skip = parseInt(req.query.skip) || 0;
-//             let limit = parseInt(req.query.limit) || 10;
-//             let sort={};
-//             sort[req.query.sortby]=req.query.order=="true"?1:-1;
-//             let query={ status: true }
-//             if(req.query.search){
-//                 query['name'] = {$regex: req.query.search, $options:"i"}
-//             }
+exports.MediaList = [
+    auth,
+    function (req, res) {
+        try {
+            let skip = parseInt(req.query.skip) || 0;
+            let limit = parseInt(req.query.limit) || 10;
+            let sort = {};
+            sort[req.query.sortby] = req.query.order == "true" ? 1 : -1;
+            let query = { status: 1 }
+            if (req.query.search) {
+                query['name'] = { $regex: req.query.search, $options: "i" }
+            }
 
-//             Role.find(query).skip(skip).limit(limit).sort(sort).then((roles) => {
-//                 if (roles.length > 0) {
-//                     Role.find(query).countDocuments().then((count) => {
-//                         return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: roles });
-//                     });
-//                 } else {
-//                     return apiResponse.successResponseWithData(res, "Operation success", { total: 0, result: [] });
-//                 }
-//             });
-//         } catch (err) {
-//             //throw error in json response with status 500. 
-//             return apiResponse.ErrorResponse(res, err);
-//         }
-//     }
-// ];
+            Media.find(query).skip(skip).limit(limit).sort(sort).then((medias) => {
+                if (medias.length > 0) {
+                    Media.find(query).countDocuments().then((count) => {
+                        return apiResponse.successResponseWithData(res, "Operation success", { total: count, result: medias });
+                    });
+                } else {
+                    return apiResponse.successResponseWithData(res, "Operation success", { total: 0, result: [] });
+                }
+            });
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
 
-// exports.RoleDetail = [
-//     auth,
-//     function (req, res) {
-//         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//             return apiResponse.successResponseWithData(res, "Operation success", {});
-//         }
-//         try {
-//             Role.findOne({ _id: req.params.id }).then((role) => {
-//                 if (role !== null) {
-//                     let roleData = new RoleData(role);
-//                     return apiResponse.successResponseWithData(res, "Operation success", roleData);
-//                 } else {
-//                     return apiResponse.successResponseWithData(res, "Operation success", {});
-//                 }
-//             });
-//         } catch (err) {
-//             //throw error in json response with status 500. 
-//             return apiResponse.ErrorResponse(res, err);
-//         }
-//     }
-// ];
+exports.MediaDetail = [
+    auth,
+    function (req, res) {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return apiResponse.successResponseWithData(res, "Operation success", {});
+        }
+        try {
+            Media.findOne({ _id: req.params.id }).then((media) => {
+                if (media !== null) {
+                    let mediaData = new MediaData(media);
+                    return apiResponse.successResponseWithData(res, "Operation success", mediaData);
+                } else {
+                    return apiResponse.successResponseWithData(res, "Operation success", {});
+                }
+            });
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
 
-// exports.RoleUpdate = [
-//     auth,
-//     body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
-//     body("acl", "name must not be empty.").exists(),
-//     (req, res) => {
-//         try {
-//             const errors = validationResult(req);
-//             var role = new Role(
-//                 {
-//                     name: req.body.name,
-//                     acl: req.body.acl,
-//                     _id: req.params.id
-//                 });
-//             if (!errors.isEmpty()) {
-//                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-//             }
-//             else {
-//                 if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//                     return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-//                 } else {
-//                     Role.findById(req.params.id, function (err, foundRole) {
-//                         if (foundRole === null) {
-//                             return apiResponse.notFoundResponse(res, "Role not exists with this id");
-//                         } else {
-//                             //update role.
+exports.MediaUpdate = [
+    auth,
+    helpers.fileupload('files', 'jpg|jpeg|png|gif'),
+    body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
+    body("page", "page must not be empty.").isLength({ min: 1 }).trim(),
+    (req, res) => {
+        try {
+            const errors = validationResult(req);
 
-//                             Role.findByIdAndUpdate(req.params.id, role, {}, function (err) {
-//                                 if (err) {
-//                                     return apiResponse.ErrorResponse(res, err);
-//                                 } else {
-//                                     let roleData = new RoleData(role);
-//                                     return apiResponse.successResponseWithData(res, "Role update Success.", roleData);
-//                                 }
-//                             });
+            var media = {
+                name: req.body.name,
+                page: req.body.page,
+                section: req.body.section,
+                link: req.body.link,
+                _id: req.params.id
+            }
 
-//                         }
-//                     });
-//                 }
-//             }
-//         } catch (err) {
-//             //throw error in json response with status 500. 
-//             return apiResponse.ErrorResponse(res, err);
-//         }
-//     }
-// ];
+            if (req.files && req.files[0]) {
+                let file = req.files[0];
+                media['fileName'] = file.filename;
+                media['fileOriginalName'] = file.originalname;
+                media['filePath'] = '/media/' + file.filename;
+                media['fileSize'] = file.size;
+                media['fileType'] = file.mimetype;
+            }
+            console.log('media',media);
+            if (!errors.isEmpty()) {
+                return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+            }
+            else {
+                if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+                    return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
+                } else {
+                    Media.findById(req.params.id, function (err, foundMedia) {
+                        if (foundMedia === null) {
+                            return apiResponse.notFoundResponse(res, "Media not exists with this id");
+                        } else {
+                            //update media.
+
+                            Media.findByIdAndUpdate(req.params.id, media, {}, function (err) {
+                                if (err) {
+                                    return apiResponse.ErrorResponse(res, err);
+                                } else {
+                                    let mediaData = new MediaData(media);
+                                    return apiResponse.successResponseWithData(res, "Media update Success.", mediaData);
+                                }
+                            });
+
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.log('test2',err)
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
 
 
-// exports.RoleDelete = [
-//     auth,
-//     function (req, res) {
-//         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//             return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-//         }
-//         try {
-//             Role.findById(req.params.id, function (err, foundRole) {
-//                 if (foundRole === null) {
-//                     return apiResponse.notFoundResponse(res, "Role not exists with this id");
-//                 } else {
-//                     //delete Role.
-//                     Role.findByIdAndUpdate(req.params.id, { status: false }, {}, function (err) {
-//                         if (err) {
-//                             return apiResponse.ErrorResponse(res, err);
-//                         } else {
-//                             return apiResponse.successResponse(res, "Role delete Success.");
-//                         }
-//                     });
+exports.MediaDelete = [
+    auth,
+    function (req, res) {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
+        }
+        try {
+            Media.findById(req.params.id, function (err, foundMedia) {
+                if (foundMedia === null) {
+                    return apiResponse.notFoundResponse(res, "Media not exists with this id");
+                } else {
+                    //delete Media.
+                    Media.findByIdAndUpdate(req.params.id, { status: 0 }, {}, function (err) {
+                        if (err) {
+                            return apiResponse.ErrorResponse(res, err);
+                        } else {
+                            return apiResponse.successResponse(res, "Media delete Success.");
+                        }
+                    });
 
-//                 }
-//             });
-//         } catch (err) {
-//             //throw error in json response with status 500. 
-//             return apiResponse.ErrorResponse(res, err);
-//         }
-//     }
-// ];
+                }
+            });
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
