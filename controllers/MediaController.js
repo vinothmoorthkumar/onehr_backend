@@ -27,14 +27,11 @@ exports.MediaSave = [
     // auth,
     helpers.fileupload('files', 'jpg|jpeg|png|gif'),
     body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
-    body('files', 'Please upload your file in Image').exists(),
     body("page", "page must not be empty.").isLength({ min: 1 }).trim(),
     // body("section", "Section must not be empty.").isLength({ min: 1 }).trim(),
     (req, res) => {
         try {
             const errors = validationResult(req);
-            console.log(req.body.fileSize);
-            console.log(req.files);
 
             let file = req.files[0]
             var media = {
@@ -56,13 +53,12 @@ exports.MediaSave = [
             else {
 
                 if (req.body.fileSize == 'single') {
-                    Media.findOneAndUpdate({ page: req.body.page }, media).then((mediaData) => {
+                    Media.findOneAndUpdate({ page: req.body.page }, media,{upsert:true}).then((mediaData) => {
                         apiResponse.successResponseWithData(res, "Media add Success.", mediaData);
                     });
                 } else {
                     return saveData()
                 }
-
                 function saveData() {
                     //Save media.
                     return Media.collection.insert(media, function (err) {
