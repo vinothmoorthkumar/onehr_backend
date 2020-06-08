@@ -34,10 +34,9 @@ exports.fileupload = function (file,allow) {
 		storage: storage,
 		fileFilter: function (req, file, callback) {
 			var ext = path.extname(file.originalname);
-			// /\.(jpg|jpeg|png|gif)$/
-			if (!ext.match(`\.(${allow})$`)) {
-				return callback(new Error('Only images are allowed'))
-			}
+			// if (!ext.match(`\.(${allow})$`)) {
+			// 	return callback(new Error('Only images are allowed'))
+			// }
 			callback(null, true)
 		},
 	}).array(file, 20);

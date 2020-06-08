@@ -53,7 +53,7 @@ exports.MediaSave = [
             else {
 
                 if (req.body.fileSize == 'single') {
-                    Media.findOneAndUpdate({ page: req.body.page }, media,{upsert:true}).then((mediaData) => {
+                    Media.findOneAndUpdate({ page: req.body.page, section: req.body.section }, media,{upsert:true}).then((mediaData) => {
                         apiResponse.successResponseWithData(res, "Media add Success.", mediaData);
                     });
                 } else {
