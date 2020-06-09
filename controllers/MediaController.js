@@ -21,6 +21,7 @@ function MediaData(data) {
     this.fileSize = data.fileSize;
     this.createdAt = data.createdAt;
     this.status = data.status;
+    this.extras = data.extras;
 }
 
 exports.MediaSave = [
@@ -46,6 +47,10 @@ exports.MediaSave = [
                 fileType: file.mimetype,
                 status: 1
             };
+
+            if(req.body.extras){
+                media['extras']=JSON.parse(req.body.extras)
+            }
 
             if (!errors.isEmpty()) {
                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
@@ -143,6 +148,10 @@ exports.MediaUpdate = [
                 section: req.body.section,
                 link: req.body.link,
                 _id: req.params.id
+            }
+
+            if(req.body.extras){
+                media['extras']=JSON.parse(req.body.extras)
             }
 
             if (req.files && req.files[0]) {

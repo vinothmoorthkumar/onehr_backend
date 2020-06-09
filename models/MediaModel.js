@@ -11,6 +11,7 @@ var MediaSchema = new mongoose.Schema({
     fileType: {type: String, required: true},
     filePath: {type: String, required: true},
     fileSize: {type: Number, required: true},
+    extras: {},
 	status: {type: Number, required: true, default: 1},
 }, {timestamps: true});
 
