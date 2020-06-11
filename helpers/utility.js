@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const multer = require('multer');
 const path = require('path');
 const apiResponse = require("../helpers/apiResponse");
+var fs = require('fs');
 
 exports.randomNumber = function (length) {
 	var text = "";
@@ -20,9 +21,10 @@ exports.bcrypthash = function (password, callback) {
 }
 
 
-exports.fileupload = function (file,allow) {
+exports.fileupload = function (file, allow, temp) {
 	var storage = multer.diskStorage({
 		destination: function (req, file, callback) {
+			// let path = temp ? './temp' : './media';
 			callback(null, './media');
 		},
 		filename: function (req, file, callback) {
@@ -41,5 +43,35 @@ exports.fileupload = function (file,allow) {
 		},
 	}).array(file, 20);
 
+}
+
+
+exports.move = function (oldPath, newPath, callback) {
+
+    fs.rename(oldPath, newPath, function (err) {
+        if (err) {
+            if (err.code === 'EXDEV') {
+                copy();
+            } else {
+                callback(err);
+            }
+            return;
+        }
+        callback();
+    });
+
+    // function copy() {
+    //     var readStream = fs.createReadStream(oldPath);
+    //     var writeStream = fs.createWriteStream(newPath);
+
+    //     readStream.on('error', callback);
+    //     writeStream.on('error', callback);
+
+    //     readStream.on('close', function () {
+    //         fs.unlink(oldPath, callback);
+    //     });
+
+    //     readStream.pipe(writeStream);
+    // }
 }
 

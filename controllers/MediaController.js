@@ -25,7 +25,7 @@ function MediaData(data) {
 }
 
 exports.MediaSave = [
-    // auth,
+    auth,
     helpers.fileupload('files', 'jpg|jpeg|png|gif'),
     body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
     body("page", "page must not be empty.").isLength({ min: 1 }).trim(),
@@ -135,7 +135,7 @@ exports.MediaDetail = [
 
 exports.MediaUpdate = [
     auth,
-    helpers.fileupload('files', 'jpg|jpeg|png|gif'),
+    helpers.fileupload('files', 'jpg|jpeg|png|gif','temp'),
     body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
     body("page", "page must not be empty.").isLength({ min: 1 }).trim(),
     (req, res) => {
@@ -153,16 +153,15 @@ exports.MediaUpdate = [
             if(req.body.extras){
                 media['extras']=JSON.parse(req.body.extras)
             }
-
+            let file = null;
             if (req.files && req.files[0]) {
-                let file = req.files[0];
+                file = req.files[0];
                 media['fileName'] = file.filename;
                 media['fileOriginalName'] = file.originalname;
-                media['filePath'] = '/media/' + file.filename;
+                // media['filePath'] = '/media/' + file.filename;
                 media['fileSize'] = file.size;
                 media['fileType'] = file.mimetype;
             }
-            console.log('media',media);
             if (!errors.isEmpty()) {
                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
             }
@@ -174,8 +173,16 @@ exports.MediaUpdate = [
                         if (foundMedia === null) {
                             return apiResponse.notFoundResponse(res, "Media not exists with this id");
                         } else {
-                            //update media.
+                            // console.log('media',media,foundMedia);
 
+                            //update media.
+                            // helpers.move(`./media/${foundMedia.fileName}`,`./trash/${foundMedia.fileName}`,function(err){
+                            //     console.log('test 1',err)
+                            //     helpers.move(`./temp/${file.filename}`,`./media/${foundMedia.fileName}`,function(err){
+                            //         console.log('test 2')
+                            //         console.log('err',err)
+                            //     })
+                            // })
                             Media.findByIdAndUpdate(req.params.id, media, {}, function (err) {
                                 if (err) {
                                     return apiResponse.ErrorResponse(res, err);
