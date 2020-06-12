@@ -10,6 +10,7 @@ const auth = require("../middlewares/jwt");
 function RoleData(data) {
     this.name = data.name;
     this.acl = data.acl;
+    this.page = data.page;
     this.createdAt = data.createdAt;
 }
 
@@ -24,6 +25,7 @@ exports.RoleSave = [
                 {
                     name: req.body.name,
                     acl: req.body.acl,
+                    page: req.body.page
                 });
 
             if (!errors.isEmpty()) {
@@ -51,11 +53,11 @@ exports.RoleList = [
         try {
             let skip = parseInt(req.query.skip) || 0;
             let limit = parseInt(req.query.limit) || 10;
-            let sort={};
-            sort[req.query.sortby]=req.query.order=="true"?1:-1;
-            let query={ status: true }
-            if(req.query.search){
-                query['name'] = {$regex: req.query.search, $options:"i"}
+            let sort = {};
+            sort[req.query.sortby] = req.query.order == "true" ? 1 : -1;
+            let query = { status: true }
+            if (req.query.search) {
+                query['name'] = { $regex: req.query.search, $options: "i" }
             }
 
             Role.find(query).skip(skip).limit(limit).sort(sort).then((roles) => {
@@ -107,6 +109,7 @@ exports.RoleUpdate = [
                 {
                     name: req.body.name,
                     acl: req.body.acl,
+                    page: req.body.page,
                     _id: req.params.id
                 });
             if (!errors.isEmpty()) {
