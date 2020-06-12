@@ -118,21 +118,27 @@ exports.login = [
 						//Compare given password with db's hash.
 						bcrypt.compare(req.body.password, user.password, function (err, same) {
 							if (same) {
-								let acl =[]
-								if(user.role && user.role.acl){
-									user.role.acl.forEach((element,i) => {
-										let permission=[];
+								let acl = []
+								if (user.role && user.role.acl) {
+									user.role.acl.forEach((element, i) => {
+										let permission = [];
 										element.permission.forEach(obj => {
-											if(obj.selected){
+											if (obj.selected) {
 												permission.push(obj.key)
 											}
 										});
 										acl.push({
-											module:element.module,
-											name:element.name,
+											module: element.module,
+											name: element.name,
 											permission
 										})
 									});
+								}
+
+								if(user.role && user.role.page){
+									for (const property in user.role.page) {
+										user.role.page[property] = user.role.page[property].map(ele => ele.slug)
+									}
 								}
 								// Check User's account active or not.
 								if (user.status) {
@@ -141,9 +147,13 @@ exports.login = [
 										username: user.username,
 										superadmin: user.superadmin || false,
 										email: user.email,
-										role: user.role ?user.role.name : 'superadmin',
-										permission:acl
+										role: user.role ? user.role.name : 'superadmin',
+										permission: acl,
 									};
+									if(user.role && user.role.page){
+										userData['pagePermission']=user.role.page
+
+									}
 									//Prepare JWT token for authentication
 									const jwtPayload = userData;
 									const jwtData = {

@@ -145,7 +145,6 @@ exports.RoleUpdate = [
     }
 ];
 
-
 exports.RoleDelete = [
     auth,
     function (req, res) {
