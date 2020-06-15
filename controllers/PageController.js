@@ -13,6 +13,7 @@ function PageData(data) {
     this.slug = data.slug;
     this.html = data.html;
     this.status = data.status;
+    this.extras = data.extras;
     this.createdAt = data.createdAt;
 }
 
@@ -46,6 +47,36 @@ exports.PageUpdate = [
                 name: req.body.name,
                 html: req.body.html,
                 slug: req.params.slug
+            }
+            if (!errors.isEmpty()) {
+                return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+            }
+            else {
+                //update page.
+                Page.updateOne({ slug: req.params.slug }, page, { upsert: true }, function (err) {
+                    if (err) {
+                        return apiResponse.ErrorResponse(res, err);
+                    } else {
+                        let pageData = new PageData(page);
+                        return apiResponse.successResponseWithData(res, "Page update Success.", pageData);
+                    }
+                });
+            }
+        } catch (err) {
+            //throw error in json response with status 500. 
+            return apiResponse.ErrorResponse(res, err);
+        }
+    }
+];
+
+exports.PageUpdateExtras = [
+    auth,
+    body("extras", "extras must not be empty.").exists(),
+    (req, res) => {
+        try {
+            const errors = validationResult(req);
+            var page =   {
+                extras: req.body.extras
             }
             if (!errors.isEmpty()) {
                 return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());

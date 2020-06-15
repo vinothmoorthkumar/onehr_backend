@@ -8,7 +8,8 @@ const Media = require("../models/MediaModel");
 function PageData(data) {
     this.name = data.name;
     this.slug = data.slug;
-    this.html = data.html;
+	this.html = data.html;
+	this.extras = data.extras;
 }
 
 

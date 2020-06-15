@@ -144,6 +144,7 @@ exports.login = [
 								if (user.status) {
 									let userData = {
 										_id: user._id,
+										name: user.name,
 										username: user.username,
 										superadmin: user.superadmin || false,
 										email: user.email,

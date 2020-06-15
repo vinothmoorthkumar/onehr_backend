@@ -6,6 +6,7 @@ var PageSchema = new Schema({
 	name: {type: String, required: true},
     html: {type: Array, required: true},
     slug: {type: String, required: true},
+    extras: {type: Object},
     status: {type: Boolean, required: true, default: 1}
 }, {timestamps: true});
 
