@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
+const auth = require("../middlewares/jwt");
 
 /**
  * User registration.
@@ -135,7 +136,7 @@ exports.login = [
 									});
 								}
 
-								if(user.role && user.role.page){
+								if (user.role && user.role.page) {
 									for (const property in user.role.page) {
 										user.role.page[property] = user.role.page[property].map(ele => ele.slug)
 									}
@@ -151,8 +152,8 @@ exports.login = [
 										role: user.role ? user.role.name : 'superadmin',
 										permission: acl,
 									};
-									if(user.role && user.role.page){
-										userData['pagePermission']=user.role.page
+									if (user.role && user.role.page) {
+										userData['pagePermission'] = user.role.page
 
 									}
 									//Prepare JWT token for authentication
@@ -286,3 +287,45 @@ exports.resendConfirmOtp = [
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}];
+
+exports.changePassword = [
+	auth,
+	body("id", "id must not be empty.").isLength({ min: 1 }).trim(),
+	body("oldpassword", "oldpassword must not be empty.").isLength({ min: 1 }).trim(),
+	body("password", "password must not be empty.").isLength({ min: 1 }).trim(),
+	(req, res) => {
+		try {
+			const errors = validationResult(req);
+			if (!errors.isEmpty()) {
+				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+			} else {
+				var query = { _id: req.body.id };
+				UserModel.findOne(query).then(user => {
+					if (user) {
+						bcrypt.compare(req.body.oldpassword, user.password, function (err, same) {
+							if (same) {
+								utility.bcrypthash(req.body.password, function (err, hash) {
+									if (!err) {
+										UserModel.findOneAndUpdate(query, {
+											password: hash,
+										}).then(response => {
+											return apiResponse.successResponse(res, "Password updated successfully");
+										});
+									} else {
+										return apiResponse.ErrorResponse(res, err);
+									}
+								})
+							} else {
+								return apiResponse.ErrorResponse(res, "Old password is not matching.");
+							}
+						})
+					} else {
+						return apiResponse.unauthorizedResponse(res, "Specified email not found.");
+					}
+				});
+			}
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+]
